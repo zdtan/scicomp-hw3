@@ -1,7 +1,11 @@
 function [ ] = hw3( )
 
+%% Q1 - git it done
 
-%% Q2
+%%
+% include git shortlog
+
+%% Q2 - a little more least squares
 
 m = 50;
 n = 5;
@@ -42,14 +46,13 @@ res_norms = [n1 n2 n3 n4]
 % Based on the 2-norms of the residuals, the QR factorisation
 % stands out from the other methods (larger in the 14th digit).
 
-%% Q3
+%% Q3 - condition numbers
 
 %%
 % Devise an experiment?!
 cond(A)
 
-%% Q4
-
+%% Q4 - image processing and the "unsharp mask"
 
 function [ uenhance ] = unsharp( u, N, strength )
     % Returns matrix of pixels, u is value of imread.
@@ -112,7 +115,7 @@ uenhance = reshape(enhance, n, n);
 
 end
 
-%% Unsharp mask on 'eye.png'
+%% 1. Unsharp mask on 'eye.png'
     u = imread('eye.png');
     % convert image to double and scale to [0,1]
     u = double(u) / 255;
@@ -122,7 +125,7 @@ end
     imwrite(result, 'result-eye.png');
     imshow('result-eye.png');
     
-%% Unsharp mask on non-blurry image
+%% 2. Unsharp mask on non-blurry image
     u = imread('testpat_noblur.png');
     % convert image to double and scale to [0,1]
     u = double(u) / 255;
@@ -145,11 +148,11 @@ end
     %%
     % More blurring steps increases this contrast at the edges.
     
-%% Changing blurring strength parameter from 0.1 to 0.5
+%% 3. Changing blurring strength parameter from 0.1 to 0.5
     u = imread('testpat_blur2.png');
     % convert image to double and scale to [0,1]
     u = double(u) / 255;
-    uenhance = unsharp(u, 10, 0.4);
+    uenhance = unsharp(u, 10, 0.5);
         
     result = [u  uenhance];
     imwrite(result, 'result-2.png');
@@ -157,7 +160,53 @@ end
     
     %%
     % Changing the blurring parameter from 0.1 to 0.5
-    % introduces more "noise" at the edges
+    % introduces more "noise" at the edges because of too much "diffusion".
+        
+%% Q5 - fitting ellipses via least-squares
+
+%% (a)
+%%
+% Solve Ax=b, where b is a n x 1 column vector of ones,
+%   and A is a n x 3 matrix with each row being the values
+%   x^2, xy, y^2 for each coordinate point (x,y).
+
+%% (b)
+function [b c d] = ellipse(x, y)
+    A = [x.^2; x.*y; y.^2]';    %transpose so n-by-3
+    n = length(x);  %should be same as length(y) as well!
+    e = ones(n,1);
+    sol = A\e;
+    b = sol(1);
+    c = sol(2);
+    d = sol(3);
+end
+
+% driver code
+x = [3 1 0 -1 -2 0 -2 2];
+y = [3 -2 3 2 -2 -4 0 0];
+[b c d] = ellipse(x, y);
+
+plot(x,y,'o');
+hold all;
+fitted = @(x,y)(b*x^2+c*x*y+d*y^2-1);
+ezplot(fitted);
+
+%% (c)
+
+% input points
+figure; clf;
+hold off, axis([-3 3 -3 3]), axis manual, hold on, grid on;
+X = []; Y = []; button = 1;
+disp('input points with mouse, button >= 2 for final point');
+while button == 1
+    [xx,yy,button] = ginput(1);
+    X = [X; xx]; Y = [Y; yy]; plot(xx,yy,'x');
+end
+
+[b c d] = ellipse(X', Y');  %transpose X, Y to row vectors
+hold all;
+fitted = @(x,y)(b*x^2+c*x*y+d*y^2-1);
+ezplot(fitted);
     
 end
 
