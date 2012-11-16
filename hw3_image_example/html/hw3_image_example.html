@@ -1,0 +1,166 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>hw3_image_example</title><meta name="generator" content="MATLAB 7.14"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2012-11-16"><meta name="DC.source" content="hw3_image_example.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Read an image from a file</a></li><li><a href="#2">Build a discrete 2D Laplace operator</a></li><li><a href="#3">Output original and result side-by-side</a></li></ul></div><h2>Read an image from a file<a name="1"></a></h2><pre class="codeinput">u = imread(<span class="string">'testpat_blur2.png'</span>);
+<span class="comment">%u = imread('eye.png');</span>
+<span class="comment">% convert image to double and scale to [0,1]</span>
+u = double(u) / 255;
+
+[n,n2] = size(u);
+<span class="keyword">if</span> (n ~= n2)
+  error(<span class="string">'by default, this only supports square images'</span>)
+<span class="keyword">end</span>
+</pre><h2>Build a discrete 2D Laplace operator<a name="2"></a></h2><pre class="codeinput">e = ones(n,1);
+L1 = spdiags([e  -2*e  e], [-1 0 1], n, n);
+<span class="comment">% this next line implements "Neumann boundary conditions": you could</span>
+<span class="comment">% try commenting it out.</span>
+L1(1,1) = -1;   L1(end,end) = -1;
+I = speye(n,n);
+L = kron(L1, I) + kron(I, L1);
+
+
+figure(1); clf;
+<span class="comment">%pcolor(u); % try this one too</span>
+imagesc(u);
+caxis([0 1])
+colormap(gray)
+axis <span class="string">equal</span>, axis <span class="string">tight</span>
+
+
+<span class="comment">% "stretch" the matrix representation of the image into one long</span>
+<span class="comment">% vector.</span>
+v = reshape(u, n*n, 1);
+
+
+<span class="comment">% Do 10 steps of blurring</span>
+<span class="keyword">for</span> i=1:10
+  v = v + 0.1*(L*v);
+<span class="keyword">end</span>
+
+<span class="comment">% convert the long vector back into a matrix</span>
+ublur = reshape(v, n, n);
+
+
+figure(2); clf;
+imagesc(ublur);
+caxis([0 1])
+colormap(gray)
+axis <span class="string">equal</span>, axis <span class="string">tight</span>
+</pre><img vspace="5" hspace="5" src="hw3_image_example_01.png" alt=""> <img vspace="5" hspace="5" src="hw3_image_example_02.png" alt=""> <h2>Output original and result side-by-side<a name="3"></a></h2><p>You could look at the resulting file with a web browser or image viewer</p><pre class="codeinput">result = [u  ublur];
+imwrite(result, <span class="string">'result.png'</span>)
+</pre><p class="footer"><br>
+      Published with MATLAB&reg; 7.14<br></p></div><!--
+##### SOURCE BEGIN #####
+%% Read an image from a file
+u = imread('testpat_blur2.png');
+%u = imread('eye.png');
+% convert image to double and scale to [0,1]
+u = double(u) / 255;
+
+[n,n2] = size(u);
+if (n ~= n2)
+  error('by default, this only supports square images')
+end
+
+
+%% Build a discrete 2D Laplace operator
+e = ones(n,1);
+L1 = spdiags([e  -2*e  e], [-1 0 1], n, n);
+% this next line implements "Neumann boundary conditions": you could
+% try commenting it out.
+L1(1,1) = -1;   L1(end,end) = -1;
+I = speye(n,n);
+L = kron(L1, I) + kron(I, L1);
+
+
+figure(1); clf;
+%pcolor(u); % try this one too
+imagesc(u);
+caxis([0 1])
+colormap(gray)
+axis equal, axis tight
+
+
+% "stretch" the matrix representation of the image into one long
+% vector.
+v = reshape(u, n*n, 1);
+
+
+% Do 10 steps of blurring
+for i=1:10
+  v = v + 0.1*(L*v);
+end
+
+% convert the long vector back into a matrix
+ublur = reshape(v, n, n);
+
+
+figure(2); clf;
+imagesc(ublur);
+caxis([0 1])
+colormap(gray)
+axis equal, axis tight
+
+
+%% Output original and result side-by-side
+% You could look at the resulting file with a web browser or image
+% viewer
+result = [u  ublur];
+imwrite(result, 'result.png')
+
+##### SOURCE END #####
+--></body></html>
